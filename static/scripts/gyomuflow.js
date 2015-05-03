@@ -88,7 +88,6 @@ $('body').mousemove(function(ev) {
   if(selectedRectId == null) {
     return true;
   }
-  console.log('MOUSEMOVE');
   var s = $('#' + selectedRectId);
   var sX = s.position().left + s.width() / 2;
   var sY = s.position().top + s.height() / 2;
@@ -197,7 +196,7 @@ $('#save').click(function() {
       to: $('#' + id).data('toRectId'),
     });
   }
-  console.log(data);
+  $.post('/', JSON.stringify(data));
 });
 
 $('#rect_guide').hide();

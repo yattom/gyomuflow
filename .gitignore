@@ -4,5 +4,6 @@ lib/
 local/
 
 static/pics_local/
+data/
 
 *pyc
