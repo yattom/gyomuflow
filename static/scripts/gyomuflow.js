@@ -1,9 +1,16 @@
 $(function() {
 
-var dragging, startX, startY;
-var currentRectIdSeq = 0;
-var currentLineIdSeq = 0;
-var selectedRectId = null;
+var drawrect = {
+  dragging: false,
+  startX: 0,
+  startY: 0,
+  currentRectIdSeq: 0,
+};
+
+var drawline = {
+  currentLineIdSeq: 0,
+  selectedRectId: null,
+}
 
 var lineTo = function(sX, sY, eX, eY, el) {
   var l = Math.min(sX, eX)
@@ -26,29 +33,29 @@ var lineTo = function(sX, sY, eX, eY, el) {
 };
 
 var rectClick = function(ev) {
-  if(selectedRectId == null) {
+  if(drawline.selectedRectId == null) {
     $(this).addClass('selected');
-    selectedRectId = ev.target.id;
+    drawline.selectedRectId = ev.target.id;
 
-    currentLineIdSeq += 1;
-    var lineId = 'line_' + currentLineIdSeq;
+    drawline.currentLineIdSeq += 1;
+    var lineId = 'line_' + drawline.currentLineIdSeq;
     $('#lines').append('<div id="' + lineId + '" class="line"></div>');
     $('#' + lineId).data('fromRectId', ev.target.id);
 
-    var s = $('#' + selectedRectId);
+    var s = $('#' + drawline.selectedRectId);
     var sX = s.position().left + s.width() / 2;
     var sY = s.position().top + s.height() / 2;
     lineTo(sX, sY, ev.pageX, ev.pageY, $('#' + lineId));
     return false;
-  } else if(selectedRectId == ev.target.id) {
-      var lineId = 'line_' + currentLineIdSeq;
+  } else if(drawline.selectedRectId == ev.target.id) {
+      var lineId = 'line_' + drawline.currentLineIdSeq;
       $('#' + lineId).remove();
       $(this).removeClass('selected');
-      selectedRectId = null;
+      drawline.selectedRectId = null;
       return false;
   } else {
-    var lineId = 'line_' + currentLineIdSeq;
-    var s = $('#' + selectedRectId);
+    var lineId = 'line_' + drawline.currentLineIdSeq;
+    var s = $('#' + drawline.selectedRectId);
     var sX = s.position().left + s.width() / 2;
     var sY = s.position().top + s.height() / 2;
     var e = $(ev.target);
@@ -57,8 +64,8 @@ var rectClick = function(ev) {
     lineTo(sX, sY, eX, eY, $('#' + lineId));
     $('#' + lineId).data('toRectId', ev.target.id);
 
-    $('#' + selectedRectId).removeClass('selected');
-    selectedRectId = null;
+    $('#' + drawline.selectedRectId).removeClass('selected');
+    drawline.selectedRectId = null;
 
     return false;
   }
@@ -68,14 +75,14 @@ $('body').mousedown(function(ev) {
   if (ev.button != 0) {
     return true;
   }
-  dragging = true;
-  currentRectIdSeq += 1;
-  startX = ev.pageX;
-  startY = ev.pageY;
-  var rectId = 'rect_' + currentRectIdSeq;
+  drawrect.dragging = true;
+  drawrect.currentRectIdSeq += 1;
+  drawrect.startX = ev.pageX;
+  drawrect.startY = ev.pageY;
+  var rectId = 'rect_' + drawrect.currentRectIdSeq;
   $('#rects').append('<div id=' + rectId +' class="rect"></div>');
 
-  var rectId = 'rect_' + currentRectIdSeq;
+  var rectId = 'rect_' + drawrect.currentRectIdSeq;
   $('#' + rectId).click(rectClick);
 
   $('#rect_guide').show();
@@ -85,66 +92,66 @@ $('body').mousedown(function(ev) {
 });
 
 $('body').mousemove(function(ev) {
-  if(selectedRectId == null) {
+  if(drawline.selectedRectId == null) {
     return true;
   }
-  var s = $('#' + selectedRectId);
+  var s = $('#' + drawline.selectedRectId);
   var sX = s.position().left + s.width() / 2;
   var sY = s.position().top + s.height() / 2;
-  var lineId = 'line_' + currentLineIdSeq;
+  var lineId = 'line_' + drawline.currentLineIdSeq;
   lineTo(sX, sY, ev.pageX, ev.pageY, $('#' + lineId));
 });
 
 $('body').click(function(ev) {
-  if(selectedRectId == null) {
+  if(drawline.selectedRectId == null) {
     return true;
   }
-  var lineId = 'line_' + currentLineIdSeq;
+  var lineId = 'line_' + drawline.currentLineIdSeq;
   $('#' + lineId).remove();
-  $('#' + selectedRectId).removeClass('selected');
-  selectedRectId = null;
+  $('#' + drawline.selectedRectId).removeClass('selected');
+  drawline.selectedRectId = null;
   return false;
 });
 
 $('body').keyup(function(ev) {
-  if (selectedRectId != null) {
+  if (drawline.selectedRectId != null) {
     if (ev.keyCode == 46) {
       var toRemove = [];
       for(i = 0; i < $('.line').length; i++) {
         var id = $('.line')[i].id;
-        if (selectedRectId == $('#' + id).data('fromRectId')
-         || selectedRectId == $('#' + id).data('toRectId')) {
+        if (drawline.selectedRectId == $('#' + id).data('fromRectId')
+         || drawline.selectedRectId == $('#' + id).data('toRectId')) {
           toRemove.push(id);
         }
       }
       for(i = 0; i < toRemove.length; i++) {
         $('#' + toRemove[i]).remove();
       }
-      $('#' + selectedRectId).remove();
-      selectedRectId = null;
+      $('#' + drawline.selectedRectId).remove();
+      drawline.selectedRectId = null;
     }
   }
 });
 
 $('body').mousemove(function(ev) {
-  if(!dragging) {
+  if(!drawrect.dragging) {
     return true;
   }
   if (ev.button != 0) {
     return true;
   }
-  var rectId = 'rect_' + currentRectIdSeq;
-  var l = Math.min(startX, ev.pageX)
-  var w = Math.abs(startX - ev.pageX)
-  var t = Math.min(startY, ev.pageY)
-  var h = Math.abs(startY - ev.pageY)
+  var rectId = 'rect_' + drawrect.currentRectIdSeq;
+  var l = Math.min(drawrect.startX, ev.pageX)
+  var w = Math.abs(drawrect.startX - ev.pageX)
+  var t = Math.min(drawrect.startY, ev.pageY)
+  var h = Math.abs(drawrect.startY - ev.pageY)
   $('#' + rectId).css('left', l);
   $('#' + rectId).css('top', t);
   $('#' + rectId).width(w)
   $('#' + rectId).height(h);
   $('#' + rectId).height(h);
 
-  var d = startX < ev.pageX ? (startY < ev.pageY ? 'se' : 'ne') : (startY < ev.pageY ? 'sw' : 'nw');
+  var d = drawrect.startX < ev.pageX ? (drawrect.startY < ev.pageY ? 'se' : 'ne') : (drawrect.startY < ev.pageY ? 'sw' : 'nw');
   $('#' + rectId).toggleClass('ne', d == 'ne');
   $('#' + rectId).toggleClass('se', d == 'se');
   $('#' + rectId).toggleClass('sw', d == 'sw');
@@ -157,17 +164,17 @@ $('body').mousemove(function(ev) {
 });
 
 $('body').mouseup(function(ev) {
-  if(!dragging) {
+  if(!drawrect.dragging) {
     return true;
   }
   if (ev.button != 0) {
     return true;
   }
-  var rectId = 'rect_' + currentRectIdSeq;
-  var l = Math.min(startX, ev.pageX)
-  var w = Math.abs(startX - ev.pageX)
-  var t = Math.min(startY, ev.pageY)
-  var h = Math.abs(startY - ev.pageY)
+  var rectId = 'rect_' + drawrect.currentRectIdSeq;
+  var l = Math.min(drawrect.startX, ev.pageX)
+  var w = Math.abs(drawrect.startX - ev.pageX)
+  var t = Math.min(drawrect.startY, ev.pageY)
+  var h = Math.abs(drawrect.startY - ev.pageY)
   if(w < 10 || h < 10) {
     $('#' + rectId).remove();
   } else {
@@ -176,14 +183,14 @@ $('body').mouseup(function(ev) {
     $('#' + rectId).width(w)
     $('#' + rectId).height(h);
 
-    var d = startX < ev.pageX ? (startY < ev.pageY ? 'se' : 'ne') : (startY < ev.pageY ? 'sw' : 'nw');
+    var d = drawrect.startX < ev.pageX ? (drawrect.startY < ev.pageY ? 'se' : 'ne') : (drawrect.startY < ev.pageY ? 'sw' : 'nw');
     $('#' + rectId).data('dir', d);
     $('#' + rectId).toggleClass('ne', d == 'ne');
     $('#' + rectId).toggleClass('se', d == 'se');
     $('#' + rectId).toggleClass('sw', d == 'sw');
     $('#' + rectId).toggleClass('nw', d == 'nw');
   }
-  dragging = false;
+  drawrect.dragging = false;
   $('#rect_guide').hide();
   return false;
 });
@@ -192,8 +199,8 @@ $('#save').click(function() {
   var i;
   var data = {
     name: $('img').attr('src'),
-    currentRectIdSeq: currentRectIdSeq,
-    currentLineIdSeq: currentLineIdSeq,
+    currentRectIdSeq: drawrect.currentRectIdSeq,
+    currentLineIdSeq: drawline.currentLineIdSeq,
     rects: [],
     lines: [],
   };
