@@ -3,4 +3,6 @@ include/
 lib/
 local/
 
+static/pics_local/
+
 *pyc

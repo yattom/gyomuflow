@@ -1,0 +1,49 @@
+canvas {
+}
+
+img {
+}
+
+.rect {
+	border: 2px solid;
+	position: absolute;
+	opacity: 0.3;
+}
+
+.line {
+	border: 2px solid pink;
+	position: absolute;
+	pointer-events: none;
+}
+
+.rect:hover {
+	border: 8px solid;
+}
+
+.selected {
+	border: 8px solid blue;
+}
+
+.selected:hover {
+	border: 8px solid blue;
+}
+
+.ne {
+	background-color: blue;
+}
+
+.se {
+	background-color: cyan;
+}
+
+.sw {
+	background-color: purple;
+}
+
+.nw {
+	background-color: lightgreen;
+}
+
+#rect_guide {
+	pointer-events: none;
+}
