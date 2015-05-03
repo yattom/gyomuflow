@@ -5,6 +5,42 @@ var drawrect = {
   startX: 0,
   startY: 0,
   currentRectIdSeq: 0,
+
+  createRect: function(ev) {
+    this.currentRectIdSeq += 1;
+    this.startX = ev.pageX;
+    this.startY = ev.pageY;
+    var rectId = 'rect_' + this.currentRectIdSeq;
+    $('#rects').append('<div id=' + rectId +' class="rect"></div>');
+
+    var rectId = 'rect_' + this.currentRectIdSeq;
+    $('#' + rectId).click(rectClick);
+
+    $('#rect_guide').show();
+    $('#rect_guide').css('left', ev.pageX);
+    $('#rect_guide').css('top', ev.pageY);
+  },
+  resizeRect: function(ev) {
+    var rectId = 'rect_' + this.currentRectIdSeq;
+    var l = Math.min(this.startX, ev.pageX)
+    var w = Math.abs(this.startX - ev.pageX)
+    var t = Math.min(this.startY, ev.pageY)
+    var h = Math.abs(this.startY - ev.pageY)
+    $('#' + rectId).css('left', l);
+    $('#' + rectId).css('top', t);
+    $('#' + rectId).width(w)
+    $('#' + rectId).height(h);
+    $('#' + rectId).height(h);
+
+    var d = this.startX < ev.pageX ? (this.startY < ev.pageY ? 'se' : 'ne') : (this.startY < ev.pageY ? 'sw' : 'nw');
+    $('#' + rectId).toggleClass('ne', d == 'ne');
+    $('#' + rectId).toggleClass('se', d == 'se');
+    $('#' + rectId).toggleClass('sw', d == 'sw');
+    $('#' + rectId).toggleClass('nw', d == 'nw');
+
+    $('#rect_guide').css('left', ev.pageX);
+    $('#rect_guide').css('top', ev.pageY);
+  },
 };
 
 var drawline = {
@@ -76,18 +112,7 @@ $('body').mousedown(function(ev) {
     return true;
   }
   drawrect.dragging = true;
-  drawrect.currentRectIdSeq += 1;
-  drawrect.startX = ev.pageX;
-  drawrect.startY = ev.pageY;
-  var rectId = 'rect_' + drawrect.currentRectIdSeq;
-  $('#rects').append('<div id=' + rectId +' class="rect"></div>');
-
-  var rectId = 'rect_' + drawrect.currentRectIdSeq;
-  $('#' + rectId).click(rectClick);
-
-  $('#rect_guide').show();
-  $('#rect_guide').css('left', ev.pageX);
-  $('#rect_guide').css('top', ev.pageY);
+  drawrect.createRect(ev);
   return false;
 });
 
@@ -140,26 +165,7 @@ $('body').mousemove(function(ev) {
   if (ev.button != 0) {
     return true;
   }
-  var rectId = 'rect_' + drawrect.currentRectIdSeq;
-  var l = Math.min(drawrect.startX, ev.pageX)
-  var w = Math.abs(drawrect.startX - ev.pageX)
-  var t = Math.min(drawrect.startY, ev.pageY)
-  var h = Math.abs(drawrect.startY - ev.pageY)
-  $('#' + rectId).css('left', l);
-  $('#' + rectId).css('top', t);
-  $('#' + rectId).width(w)
-  $('#' + rectId).height(h);
-  $('#' + rectId).height(h);
-
-  var d = drawrect.startX < ev.pageX ? (drawrect.startY < ev.pageY ? 'se' : 'ne') : (drawrect.startY < ev.pageY ? 'sw' : 'nw');
-  $('#' + rectId).toggleClass('ne', d == 'ne');
-  $('#' + rectId).toggleClass('se', d == 'se');
-  $('#' + rectId).toggleClass('sw', d == 'sw');
-  $('#' + rectId).toggleClass('nw', d == 'nw');
-
-  $('#rect_guide').css('left', ev.pageX);
-  $('#rect_guide').css('top', ev.pageY);
-
+  drawrect.resizeRect(ev);
   return false;
 });
 
