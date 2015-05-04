@@ -163,6 +163,8 @@ var drawline = {
       $(this).addClass('selected');
       drawline.selectedRectId = ev.target.id;
 
+      drawline.startX = ev.pageX;
+      drawline.startY = ev.pageY;
       drawline.startLine(ev.target.id, drawline.startX, drawline.startY);
       drawline.lineTo(ev.pageX, ev.pageY);
       return false;
@@ -320,6 +322,7 @@ $('#save').click(function() {
       top: $('#' + id).position().top - $('.image').position().top,
       width: $('#' + id).width(),
       height: $('#' + id).height(),
+      groupMember: $('#' + id).data('groupMember') ? $('#' + id).data('groupMember') : null,
     });
   }
   for(i = 0; i < $('.line').length; i++) {
@@ -363,8 +366,14 @@ $('#load').click(function() {
         drawrect.createRect(rect.left + offsetX, rect.top + offsetY, rect.id);
         drawrect.resizeRect(rect.left + offsetX + rect.width, rect.top + offsetY + rect.height, rect.id);
         $('#' + rect.id).removeClass('ne nw se sw');
-        $('#' + rect.id).addClass(rect.dir);
-        $('#' + rect.id).data('dir', rect.dir);
+        if(rect.groupMember == null) {
+          $('#' + rect.id).addClass(rect.dir);
+          $('#' + rect.id).data('dir', rect.dir);
+        } else {
+          $('#' + rect.id).addClass('group');
+          $('#' + rect.id).data('groupMember', rect.groupMember);
+          drawrect.resizeGroup(rect.id);
+        }
       }
       drawrect.currentRectIdSeq = data.currentRectIdSeq;
 
@@ -373,7 +382,8 @@ $('#load').click(function() {
         drawline.startLine(line.from, line.startX + offsetX, line.startY + offsetY, line.id);
         drawline.finishLine(line.to, line.endX + offsetX, line.endY + offsetY, line.id);
       }
-      drawrect.currentLineIdSeq = data.currentLineIdSeq;
+      drawline.currentLineIdSeq = data.currentLineIdSeq;
+      drawline.selectedRectId = null;
     },
     error: function(jqXHR, stat) {
       console.log('error');
