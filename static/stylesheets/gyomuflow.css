@@ -2,6 +2,7 @@
 	border: 1px solid;
 	position: absolute;
 	opacity: 0.3;
+	z-index: 20;
 }
 
 .line {
@@ -15,11 +16,11 @@
 }
 
 .selected {
-	border: 3px solid blue;
+	border: 3px solid orange;
 }
 
 .selected:hover {
-	border: 3px solid blue;
+	border: 3px solid orange;
 }
 
 .ne {
@@ -38,6 +39,15 @@
 	background-color: lightgreen;
 }
 
+.group {
+	background-color: skyblue;
+	z-index: 10;
+}
+
 #rect_guide {
+	pointer-events: none;
+}
+
+#rect_guide div {
 	pointer-events: none;
 }
