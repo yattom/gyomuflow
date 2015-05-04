@@ -6,22 +6,20 @@ var drawrect = {
   startY: 0,
   currentRectIdSeq: 0,
 
-  createRect: function(ev) {
-    this.createBaseRect(ev.pageX, ev.pageY);
-    $('#rect_guide').css('left', ev.pageX);
-    $('#rect_guide').css('top', ev.pageY);
+  createRect: function(startX, startY, rectId=null) {
+    this.createBaseRect(startX, startY, rectId);
   },
-  createBaseRect: function(startX, startY) {
-    this.currentRectIdSeq += 1;
+  createBaseRect: function(startX, startY, rectId=null) {
+    if(rectId == null) {
+      this.currentRectIdSeq += 1;
+      rectId = 'rect_' + this.currentRectIdSeq;
+    }
     this.startX = startX;
     this.startY = startY;
-    var rectId = 'rect_' + this.currentRectIdSeq;
     $('#rects').append('<div id=' + rectId +' class="rect"></div>');
 
-    var rectId = 'rect_' + this.currentRectIdSeq;
     $('#' + rectId).click(drawline.rectClick);
 
-    $('#rect_guide').show();
     return rectId;
   },
   removeRect: function(rectId) {
@@ -49,8 +47,10 @@ var drawrect = {
     }
     $('#' + rectId).remove();
   },
-  resizeRect: function(cursorX, cursorY) {
-    var rectId = 'rect_' + this.currentRectIdSeq;
+  resizeRect: function(cursorX, cursorY, rectId=null) {
+    if(rectId == null) {
+      rectId = 'rect_' + this.currentRectIdSeq;
+    }
     var l = Math.min(this.startX, cursorX)
     var w = Math.abs(this.startX - cursorX)
     var t = Math.min(this.startY, cursorY)
@@ -65,6 +65,7 @@ var drawrect = {
     $('#' + rectId).toggleClass('se', d == 'se');
     $('#' + rectId).toggleClass('sw', d == 'sw');
     $('#' + rectId).toggleClass('nw', d == 'nw');
+    $('#' + rectId).data('dir', d);
 
     $('#rect_guide').css('left', cursorX);
     $('#rect_guide').css('top', cursorY);
@@ -119,7 +120,14 @@ var drawrect = {
       }
     }
     return null;
-  }
+  },
+  initialize: function() {
+    this.dragging = false;
+    this.startX = 0;
+    this.startY = 0;
+    this.currentRectIdSeq = 0;
+    $('#rects').empty();
+  },
 };
 
 var drawline = {
@@ -128,26 +136,35 @@ var drawline = {
   startY: 0,
   selectedRectId: null,
 
-  createLine: function() {
-    this.currentLineIdSeq += 1;
-    var lineId = 'line_' + drawline.currentLineIdSeq;
+  startLine: function(fromRectId, startX, startY, lineId=null) {
+    if(lineId == null) {
+      this.currentLineIdSeq += 1;
+      lineId = 'line_' + drawline.currentLineIdSeq;
+    }
+    drawline.startX = startX;
+    drawline.startY = startY;
     $('#lines').append('<div id="' + lineId + '" class="line"><div class="arrow1"></div><div class="arrow2"></div></div>');
+    $('#' + lineId).data('fromRectId', fromRectId);
+    $('#' + lineId).data('startX', startX);
+    $('#' + lineId).data('startY', startY);
     return lineId;
+  },
+  finishLine: function(toRectId, endX, endY, lineId=null) {
+    if(lineId == null) {
+      lineId = 'line_' + drawline.currentLineIdSeq;
+    }
+    drawline.lineTo(endX, endY, lineId);
+    $('#' + lineId).data('toRectId', toRectId);
+    $('#' + lineId).data('endX', endX);
+    $('#' + lineId).data('endY', endY);
   },
   rectClick: function(ev) {
     if(drawline.selectedRectId == null) {
       $(this).addClass('selected');
       drawline.selectedRectId = ev.target.id;
-      drawline.startX = ev.pageX;
-      drawline.startY = ev.pageY;
 
-      var lineId = drawline.createLine();
-      $('#' + lineId).data('fromRectId', ev.target.id);
-      $('#' + lineId).data('startX', drawline.startX);
-      $('#' + lineId).data('startY', drawline.startY);
-
-      var s = $('#' + drawline.selectedRectId);
-      drawline.lineTo(drawline.startX, drawline.startY, ev.pageX, ev.pageY, $('#' + lineId));
+      drawline.startLine(ev.target.id, drawline.startX, drawline.startY);
+      drawline.lineTo(ev.pageX, ev.pageY);
       return false;
     } else if(drawline.selectedRectId == ev.target.id) {
         var lineId = 'line_' + drawline.currentLineIdSeq;
@@ -168,21 +185,22 @@ var drawline = {
         drawrect.addToGroup(groupRectId, ev.target.id);
       }
     } else {
-      var lineId = 'line_' + drawline.currentLineIdSeq;
-      drawline.lineTo(drawline.startX, drawline.startY, ev.pageX, ev.pageY, $('#' + lineId));
-      $('#' + lineId).data('toRectId', ev.target.id);
-      $('#' + lineId).data('endX', ev.pageX);
-      $('#' + lineId).data('endY', ev.pageY);
-
+      drawline.finishLine(ev.target.id, ev.pageX, ev.pageY);
       $('#' + drawline.selectedRectId).removeClass('selected');
       drawline.selectedRectId = null;
 
       return false;
     }
   },
-  lineTo: function(sX, sY, eX, eY, el) {
-    var l = Math.min(sX, eX)
-    var t = Math.min(sY, eY)
+  lineTo: function(eX, eY, lineId=null) {
+    if(lineId == null) {
+      lineId = 'line_' + drawline.currentLineIdSeq;
+    }
+    var el = $('#' + lineId);
+    var sX = this.startX;
+    var sY = this.startY;
+    var l = Math.min(sX, eX);
+    var t = Math.min(sY, eY);
     var x = eX - sX;
     var y = eY - sY;
     if(x > 0) {
@@ -197,6 +215,13 @@ var drawline = {
     el.css('transform-origin', 'left top');
     el.css('transform', 'rotate(' + Math.atan2(y, x) + 'rad)');
   },
+  initialize: function() {
+    this.currentLineIdSeq = 0;
+    this.startX = 0;
+    this.startY = 0;
+    this.selectedRectId = null;
+    $('#lines').empty();
+  },
 }
 
 
@@ -205,7 +230,10 @@ $('body').mousedown(function(ev) {
     return true;
   }
   drawrect.dragging = true;
-  drawrect.createRect(ev);
+  drawrect.createRect(ev.pageX, ev.pageY);
+  $('#rect_guide').css('left', ev.pageX);
+  $('#rect_guide').css('top', ev.pageY);
+  $('#rect_guide').show();
   return false;
 });
 
@@ -213,13 +241,12 @@ $('body').mousemove(function(ev) {
   if(drawline.selectedRectId == null) {
     return true;
   }
+  var lineId = 'line_' + drawline.currentLineIdSeq;
   if(ev.shiftKey) {
-    var lineId = 'line_' + drawline.currentLineIdSeq;
     $('#' + lineId).hide();
   } else {
     $('#' + drawline.selectedRectId).show();
-    var lineId = 'line_' + drawline.currentLineIdSeq;
-    drawline.lineTo(drawline.startX, drawline.startY, ev.pageX, ev.pageY, $('#' + lineId));
+    drawline.lineTo(ev.pageX, ev.pageY);
     $('#' + lineId).show();
   }
 });
@@ -263,24 +290,12 @@ $('body').mouseup(function(ev) {
     return true;
   }
   var rectId = 'rect_' + drawrect.currentRectIdSeq;
-  var l = Math.min(drawrect.startX, ev.pageX)
   var w = Math.abs(drawrect.startX - ev.pageX)
-  var t = Math.min(drawrect.startY, ev.pageY)
   var h = Math.abs(drawrect.startY - ev.pageY)
   if(w < 10 || h < 10) {
     $('#' + rectId).remove();
   } else {
-    $('#' + rectId).css('left', l);
-    $('#' + rectId).css('top', t);
-    $('#' + rectId).width(w)
-    $('#' + rectId).height(h);
-
-    var d = drawrect.startX < ev.pageX ? (drawrect.startY < ev.pageY ? 'se' : 'ne') : (drawrect.startY < ev.pageY ? 'sw' : 'nw');
-    $('#' + rectId).data('dir', d);
-    $('#' + rectId).toggleClass('ne', d == 'ne');
-    $('#' + rectId).toggleClass('se', d == 'se');
-    $('#' + rectId).toggleClass('sw', d == 'sw');
-    $('#' + rectId).toggleClass('nw', d == 'nw');
+    drawrect.resizeRect(ev.pageX, ev.pageY);
   }
   drawrect.dragging = false;
   $('#rect_guide').hide();
@@ -319,7 +334,57 @@ $('#save').click(function() {
       endY: $('#' + id).data('endY') - $('.image').position().top,
     });
   }
-  $.post('/', JSON.stringify(data));
+  $.post('/drawing', JSON.stringify(data));
+});
+
+$('#load').click(function() {
+  $('#save').click();
+  var i;
+  var imageUrl = prompt('Enter image url');
+  if(imageUrl == null) {
+    return;
+  }
+  imageUrl = imageUrl.trim();
+  $.ajax({
+    url: '/drawing',
+    data: {name: imageUrl},
+    method: 'GET',
+    success: function(raw) {
+      var data = JSON.parse(raw);
+      drawrect.initialize();
+      drawline.initialize();
+
+      $('.image').attr('src', imageUrl);
+      offsetX = $('.image').position().left;
+      offsetY = $('.image').position().top;
+
+      for(i = 0; i < data.rects.length; i++) {
+        var rect = data.rects[i];
+        drawrect.createRect(rect.left + offsetX, rect.top + offsetY, rect.id);
+        drawrect.resizeRect(rect.left + offsetX + rect.width, rect.top + offsetY + rect.height, rect.id);
+        $('#' + rect.id).removeClass('ne nw se sw');
+        $('#' + rect.id).addClass(rect.dir);
+        $('#' + rect.id).data('dir', rect.dir);
+      }
+      drawrect.currentRectIdSeq = data.currentRectIdSeq;
+
+      for(i = 0; i < data.lines.length; i++) {
+        var line = data.lines[i];
+        drawline.startLine(line.from, line.startX + offsetX, line.startY + offsetY, line.id);
+        drawline.finishLine(line.to, line.endX + offsetX, line.endY + offsetY, line.id);
+      }
+      drawrect.currentLineIdSeq = data.currentLineIdSeq;
+    },
+    error: function(jqXHR, stat) {
+      console.log('error');
+      if(jqXHR.status != 404) {
+        return;
+      }
+      drawrect.initialize();
+      drawline.initialize();
+      $('.image').attr('src', imageUrl);
+    }
+  });
 });
 
 $('#rect_guide').hide();

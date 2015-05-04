@@ -4,16 +4,29 @@ import urllib
 from codecs import open
 
 urls = (
-    '/', 'drawing'
+    '/', 'index',
+    '/drawing', 'drawing',
 )
 app = web.application(urls, globals())
+
+
+class index:
+
+    def GET(self):
+        render = web.template.render('templates/')
+        return render.index()
 
 
 class drawing:
 
     def GET(self):
-        render = web.template.render('templates/')
-        return render.index()
+        params = web.input()
+        name = params['name']
+        try:
+            with open('data/' + urllib.quote(name, safe=''), 'r', encoding='utf8') as f:
+                return f.read()
+        except IOError:
+            raise web.notfound()
 
     def POST(self):
         # FIXME: I'm not too sure if multibyte data works with this
