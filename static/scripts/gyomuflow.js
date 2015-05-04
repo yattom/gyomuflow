@@ -7,14 +7,14 @@ var drawrect = {
   currentRectIdSeq: 0,
 
   createRect: function(ev) {
-    this.createBaseRect(ev);
+    this.createBaseRect(ev.pageX, ev.pageY);
     $('#rect_guide').css('left', ev.pageX);
     $('#rect_guide').css('top', ev.pageY);
   },
-  createBaseRect: function(ev) {
+  createBaseRect: function(startX, startY) {
     this.currentRectIdSeq += 1;
-    this.startX = ev.pageX;
-    this.startY = ev.pageY;
+    this.startX = startX;
+    this.startY = startY;
     var rectId = 'rect_' + this.currentRectIdSeq;
     $('#rects').append('<div id=' + rectId +' class="rect"></div>');
 
@@ -59,7 +59,6 @@ var drawrect = {
     $('#' + rectId).css('top', t);
     $('#' + rectId).width(w)
     $('#' + rectId).height(h);
-    $('#' + rectId).height(h);
 
     var d = this.startX < cursorX ? (this.startY < cursorY ? 'se' : 'ne') : (this.startY < cursorY ? 'sw' : 'nw');
     $('#' + rectId).toggleClass('ne', d == 'ne');
@@ -71,7 +70,7 @@ var drawrect = {
     $('#rect_guide').css('top', cursorY);
   },
   createGroupRect: function(ev) {
-    var rectId = drawrect.createBaseRect(ev);
+    var rectId = drawrect.createBaseRect(ev.pageX, ev.pageY);
     $('#' + rectId).addClass('group');
     $('#' + rectId).data('groupMember', []);
     return rectId;
@@ -302,8 +301,8 @@ $('#save').click(function() {
     data.rects.push({
       id: id,
       dir: $('#' + id).data('dir'),
-      left: $('#' + id).css('left'),
-      top: $('#' + id).css('top'),
+      left: $('#' + id).position().left - $('.image').position().left,
+      top: $('#' + id).position().top - $('.image').position().top,
       width: $('#' + id).width(),
       height: $('#' + id).height(),
     });
@@ -314,10 +313,10 @@ $('#save').click(function() {
       id: id,
       from: $('#' + id).data('fromRectId'),
       to: $('#' + id).data('toRectId'),
-      startX: $('#' + id).data('startX'),
-      startY: $('#' + id).data('startY'),
-      endX: $('#' + id).data('endX'),
-      endY: $('#' + id).data('endY'),
+      startX: $('#' + id).data('startX') - $('.image').position().left,
+      startY: $('#' + id).data('startY') - $('.image').position().top,
+      endX: $('#' + id).data('endX') - $('.image').position().left,
+      endY: $('#' + id).data('endY') - $('.image').position().top,
     });
   }
   $.post('/', JSON.stringify(data));
