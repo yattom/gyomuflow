@@ -160,6 +160,9 @@ var drawline = {
       if(drawrect.isInGroup(drawline.selectedRectId)) {
         var groupRectId = drawrect.getGroupRectId(drawline.selectedRectId);
         drawrect.addToGroup(groupRectId, ev.target.id);
+      } else if(drawrect.isInGroup(ev.target.id)) {
+        var groupRectId = drawrect.getGroupRectId(ev.target.id);
+        drawrect.addToGroup(groupRectId, drawline.selectedRectId);
       } else {
         var groupRectId = drawrect.createGroupRect(ev);
         drawrect.addToGroup(groupRectId, drawline.selectedRectId);
