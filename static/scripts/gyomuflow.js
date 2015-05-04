@@ -125,6 +125,8 @@ var drawrect = {
 
 var drawline = {
   currentLineIdSeq: 0,
+  startX: 0,
+  startY: 0,
   selectedRectId: null,
 
   createLine: function() {
@@ -137,14 +139,16 @@ var drawline = {
     if(drawline.selectedRectId == null) {
       $(this).addClass('selected');
       drawline.selectedRectId = ev.target.id;
+      drawline.startX = ev.pageX;
+      drawline.startY = ev.pageY;
 
       var lineId = drawline.createLine();
       $('#' + lineId).data('fromRectId', ev.target.id);
+      $('#' + lineId).data('startX', drawline.startX);
+      $('#' + lineId).data('startY', drawline.startY);
 
       var s = $('#' + drawline.selectedRectId);
-      var sX = s.position().left + s.width() / 2;
-      var sY = s.position().top + s.height() / 2;
-      drawline.lineTo(sX, sY, ev.pageX, ev.pageY, $('#' + lineId));
+      drawline.lineTo(drawline.startX, drawline.startY, ev.pageX, ev.pageY, $('#' + lineId));
       return false;
     } else if(drawline.selectedRectId == ev.target.id) {
         var lineId = 'line_' + drawline.currentLineIdSeq;
@@ -163,14 +167,10 @@ var drawline = {
       }
     } else {
       var lineId = 'line_' + drawline.currentLineIdSeq;
-      var s = $('#' + drawline.selectedRectId);
-      var sX = s.position().left + s.width() / 2;
-      var sY = s.position().top + s.height() / 2;
-      var e = $(ev.target);
-      var eX = e.position().left + e.width() / 2;
-      var eY = e.position().top + e.height() / 2;
-      drawline.lineTo(sX, sY, eX, eY, $('#' + lineId));
+      drawline.lineTo(drawline.startX, drawline.startY, ev.pageX, ev.pageY, $('#' + lineId));
       $('#' + lineId).data('toRectId', ev.target.id);
+      $('#' + lineId).data('endX', ev.pageX);
+      $('#' + lineId).data('endY', ev.pageY);
 
       $('#' + drawline.selectedRectId).removeClass('selected');
       drawline.selectedRectId = null;
@@ -216,11 +216,8 @@ $('body').mousemove(function(ev) {
     $('#' + lineId).hide();
   } else {
     $('#' + drawline.selectedRectId).show();
-    var s = $('#' + drawline.selectedRectId);
-    var sX = s.position().left + s.width() / 2;
-    var sY = s.position().top + s.height() / 2;
     var lineId = 'line_' + drawline.currentLineIdSeq;
-    drawline.lineTo(sX, sY, ev.pageX, ev.pageY, $('#' + lineId));
+    drawline.lineTo(drawline.startX, drawline.startY, ev.pageX, ev.pageY, $('#' + lineId));
     $('#' + lineId).show();
   }
 });
@@ -314,6 +311,10 @@ $('#save').click(function() {
       id: id,
       from: $('#' + id).data('fromRectId'),
       to: $('#' + id).data('toRectId'),
+      startX: $('#' + id).data('startX'),
+      startY: $('#' + id).data('startY'),
+      endX: $('#' + id).data('endX'),
+      endY: $('#' + id).data('endY'),
     });
   }
   $.post('/', JSON.stringify(data));
