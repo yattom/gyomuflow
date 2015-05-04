@@ -9,6 +9,31 @@
 	border: 2px solid pink;
 	position: absolute;
 	pointer-events: none;
+	z-index: 30;
+}
+
+.arrow1 {
+	border: 2px solid pink;
+	position: absolute;
+	right: 0px;
+	top: 0px;
+	width: 24px;
+	height: 0px;
+	pointer-events: none;
+	transform: rotate(45deg);
+    transform-origin: right top;
+}
+
+.arrow2 {
+	border: 2px solid pink;
+	position: absolute;
+	right: 0px;
+	top: 0px;
+	width: 24px;
+	height: 0px;
+	pointer-events: none;
+	transform: rotate(-45deg);
+    transform-origin: right top;
 }
 
 .rect:hover {

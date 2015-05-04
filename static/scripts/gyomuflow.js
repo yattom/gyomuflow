@@ -127,14 +127,18 @@ var drawline = {
   currentLineIdSeq: 0,
   selectedRectId: null,
 
+  createLine: function() {
+    this.currentLineIdSeq += 1;
+    var lineId = 'line_' + drawline.currentLineIdSeq;
+    $('#lines').append('<div id="' + lineId + '" class="line"><div class="arrow1"></div><div class="arrow2"></div></div>');
+    return lineId;
+  },
   rectClick: function(ev) {
     if(drawline.selectedRectId == null) {
       $(this).addClass('selected');
       drawline.selectedRectId = ev.target.id;
 
-      drawline.currentLineIdSeq += 1;
-      var lineId = 'line_' + drawline.currentLineIdSeq;
-      $('#lines').append('<div id="' + lineId + '" class="line"></div>');
+      var lineId = drawline.createLine();
       $('#' + lineId).data('fromRectId', ev.target.id);
 
       var s = $('#' + drawline.selectedRectId);
@@ -179,17 +183,15 @@ var drawline = {
     var t = Math.min(sY, eY)
     var x = eX - sX;
     var y = eY - sY;
-    if(x < 0) {
-      x = -x;
-      y = -y;
-      sX = eX;
-      sY = eY;
+    if(x > 0) {
+      var rot = Math.atan2(y, x);
+    } else {
+      var rot = Math.atan2(-y, -x);
     }
     el.css('left', sX);
     el.css('top', sY);
     el.width(Math.sqrt(x * x + y * y));
     el.height('0px');
-    var rot = Math.atan2(y, x);
     el.css('transform-origin', 'left top');
     el.css('transform', 'rotate(' + Math.atan2(y, x) + 'rad)');
   },
