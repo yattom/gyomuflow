@@ -340,14 +340,7 @@ $('#save').click(function() {
   $.post('/drawing', JSON.stringify(data));
 });
 
-$('#load').click(function() {
-  $('#save').click();
-  var i;
-  var imageUrl = prompt('Enter image url');
-  if(imageUrl == null) {
-    return;
-  }
-  imageUrl = imageUrl.trim();
+var load = function(imageUrl) {
   $.ajax({
     url: '/drawing',
     data: {name: imageUrl},
@@ -395,7 +388,38 @@ $('#load').click(function() {
       $('.image').attr('src', imageUrl);
     }
   });
+}
+
+$('#load').click(function() {
+  $('#save').click();
+  var i;
+  var imageUrl = prompt('Enter image url');
+  if(imageUrl == null) {
+    return;
+  }
+  load(imageUrl.trim());
 });
 
+var getUrlParameter = function (sParam)
+{
+    var sPageURL = window.location.search.substring(1);
+    var sURLVariables = sPageURL.split('&');
+    for (var i = 0; i < sURLVariables.length; i++) 
+    {
+        var sParameterName = sURLVariables[i].substring(0, sURLVariables[i].indexOf('='));
+        console.log(sParameterName);
+        if (sParameterName == sParam) 
+        {
+            return sURLVariables[i].substring(sURLVariables[i].indexOf('=') + 1, sURLVariables[i].length);
+        }
+    }
+    return null;
+}  
+
+var name = getUrlParameter('name');
+if(name != null) {
+  load(name);
+}
+
 $('#rect_guide').hide();
-});
+}
